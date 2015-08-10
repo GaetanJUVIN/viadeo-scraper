@@ -85,8 +85,8 @@ module Viadeo
        @education ||= @page.search('.blockitemEducation').map do |item|
         name   = item.at('span[itemprop="name"]').text.gsub(/\s+|\n/, ' ').strip      if item.at('span[itemprop="name"]')
         desc   = item.at('.type').text.gsub(/\s+|\n/, ' ').strip      if item.at('.type')
-        startDate = item.at('.dtstart').text.gsub(/\s+|\n/, ' ').strip if item.at('.dtstart')
-        endDate = item.at('.dtend').text.gsub(/\s+|\n/, ' ').strip if item.at('.dtend')
+        startDate = item.at('.start-date').text.gsub(/\s+|\n/, ' ').strip if item.at('.start-date')
+        endDate = item.at('.end-date').text.gsub(/\s+|\n/, ' ').strip if item.at('.end-date')
 
         {:name => name, :description => desc, :startDate => startDate, :endDate => endDate}
       end
@@ -174,11 +174,11 @@ module Viadeo
 #          company[:company]     = node.at('span[itemprop="name"]').text.gsub(/\s+|\n/, ' ').strip if node.at('span[itemprop="name"]')
 #          company[:description] = node.at('span[itemprop="name"]/div').text.gsub(/\s+|\n/, ' ').strip if node.at('span[itemprop="name"]/div')
           company[:description] = node.at(".description").text.gsub(/\s+|\n/, ' ').strip if node.at(".description")
-
-          start_date  = node.at('.dtstart')['title'] rescue nil
+          p node.at('.start-date').text
+          start_date  = node.at('.start-date').text.gsub(/\s+|\n/, ' ').strip rescue nil
           company[:start_date] = parse_date(start_date) rescue nil
 
-          end_date = node.at('.dtend')['title'] rescue nil
+          end_date = node.at('.end-date').text.gsub(/\s+|\n/, ' ').strip rescue nil
           company[:end_date] = parse_date(end_date) rescue nil
 
 	  company_link = node.at('.itemName')['href'] if node.at('.itemName')
@@ -195,7 +195,7 @@ module Viadeo
 
     def parse_date(date)
       date = "#{date}-01-01" if date =~ /^(19|20)\d{2}$/
-      Date.parse(date)
+      Date.parse_international(date)
     end
 
     def get_company_details(link)
