@@ -150,8 +150,8 @@ module Viadeo
         v = {}
         v[:link]    = visitor.at('a')['href']
         v[:name]    = visitor.at('.bd/h4.fullname/a').text
-        v[:title]   = visitor.at('.headline').text.gsub('...',' ').split(/(, |at ){1}/).first.strip rescue nil
-        v[:company] = visitor.at('.headline').text.gsub('...',' ').split(/(, |at ){1}/)[2..-1].join.strip rescue nil
+        v[:title]   = visitor.at('.headline').text.gsub('...',' ').split(/(, | at ){1}/).first.strip rescue nil
+        v[:company] = visitor.at('.headline').text.gsub('...',' ').split(/(, | at ){1}/)[2..-1].join.strip rescue nil
         v
       end
     end
