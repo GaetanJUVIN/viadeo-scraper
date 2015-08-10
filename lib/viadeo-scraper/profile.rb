@@ -10,7 +10,7 @@ module Viadeo
 
     USER_AGENTS = ['Windows IE 6', 'Windows IE 7', 'Windows Mozilla', 'Mac Safari', 'Mac FireFox', 'Mac Mozilla', 'Linux Mozilla', 'Linux Firefox', 'Linux Konqueror']
 
-    ATTRIBUTES = %w(name first_name last_name title location country industry summary keywords picture viadeo_url education groups websites languages skills certifications organizations past_companies current_companies recommended_visitors)
+    ATTRIBUTES = %w(name first_name last_name title location country industry summary keywords picture viadeo_url education groups websites languages skills social_links certifications organizations past_companies current_companies recommended_visitors)
 
     attr_reader :page, :viadeo_url
 
@@ -53,7 +53,7 @@ module Viadeo
 
     def industry
 	##TODO
-      @industry ||= (@page.at('.industry').text.gsub(/\s+/, ' ').strip if @page.at('.industry'))
+#      @industry ||= (@page.at('.industry').text.gsub(/\s+/, ' ').strip if @page.at('.industry'))
     end
 
     def summary
@@ -96,7 +96,18 @@ module Viadeo
       end
     end
 
+    def social_links
+      @social_links ||= @page.search('#target_sociallinks/li').map do |item|
+        link = item.css('a').first
+        img = item.css('img').first
+        link_url = link['href'] if link
+        name = img['class'].split(' ').select { |klass| klass =~ /logo(\w+)/ }[0].gsub('logo', '') if img
+        {name: name, link: link_url}
+      end
+    end
+
     def websites
+
 	#TODO
       @websites ||=  @page.search('.website').flat_map do |site|
         url = "http://www.linkedin.com#{site.at('a')['href']}"
@@ -139,12 +150,11 @@ module Viadeo
     end
 
     def recommended_visitors
-##TODO
       @recommended_visitors ||= @page.search('.contact-list//li.contact').map do |visitor|
         v = {}
         v[:link]    = visitor.at('a')['href']
         v[:name]    = visitor.at('.bd/h4.fullname/a').text
-        v[:title]   = visitor.at('.headline').text.gsub('...',' ').split(/(, |at ){1}/).first.strip
+        v[:title]   = visitor.at('.headline').text.gsub('...',' ').split(/(, |at ){1}/).first.strip rescue nil
         v[:company] = visitor.at('.headline').text.gsub('...',' ').split(/(, |at ){1}/)[2..-1].join.strip rescue nil
         v
       end
