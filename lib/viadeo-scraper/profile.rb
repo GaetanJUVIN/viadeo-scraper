@@ -48,7 +48,7 @@ module Viadeo
     end
 
     def country
-      @country ||= (@page.at('.location > span[itemprop="addressCountry"]').text.split(',').last.strip if @page.at('.location > span[itemprop="addressCountry"]'))
+      @country ||= (@page.at('.location > span[itemprop="addressCountry"]').text.split(',').last.strip if @page.at('.location > span[itemprop="addressCountry"]').text.blank? == false)
     end
 
     def industry
@@ -83,10 +83,14 @@ module Viadeo
 
     def education
        @education ||= @page.search('.blockitemEducation').map do |item|
-        name   = item.at('span[itemprop="name"]').text.gsub(/\s+|\n/, ' ').strip      if item.at('span[itemprop="name"]')
-        desc   = item.at('.type').text.gsub(/\s+|\n/, ' ').strip      if item.at('.type')
-        startDate = item.at('.start-date').text.gsub(/\s+|\n/, ' ').strip if item.at('.start-date')
-        endDate = item.at('.end-date').text.gsub(/\s+|\n/, ' ').strip if item.at('.end-date')
+        name      = item.at('span[itemprop="name"]').text.gsub(/\s+|\n/, ' ').strip      if item.at('span[itemprop="name"]')
+        desc      = item.at('.type').text.gsub(/\s+|\n/, ' ').strip      if item.at('.type')
+        startDate = parse_date(item.at('.start-date').text.gsub(/\s+|\n/, ' ').strip) if item.at('.start-date')
+        if item.at('.stillIntrue')
+          endDate = nil
+        elsif item.at('.end-date')
+          endDate = parse_date(item.at('.end-date').text.gsub(/\s+|\n/, ' ').strip)
+        end
 
         {:name => name, :description => desc, :startDate => startDate, :endDate => endDate}
       end
@@ -104,31 +108,24 @@ module Viadeo
     def groups
       @groups ||= @page.search('.boxFollowGroup//a').map do |item|
         name = item.text.gsub(/\s+|\n/, ' ').strip
-        link = "item['href']}"
+        link = item['href']
         {:name => name, :link => link}
       end
     end
 
     def organizations
-#TODO
-      @organizations ||= @page.search('ul.organizations/li.organization').map do |item|
-        name       = item.search('h3').text.gsub(/\s+|\n/, ' ').strip rescue nil
-        start_date, end_date = item.search('ul.specifics li').text.gsub(/\s+|\n/, ' ').strip.split(' to ')
-        start_date = Date.parse(start_date) rescue nil
-        end_date   = Date.parse(end_date)   rescue nil
-        {:name => name, :start_date => start_date, :end_date => end_date}
-      end
     end
 
     def languages
       @languages ||= @page.search('.spoken-languages//span.name').map do |item|
-        language    = item['data-isocode'] rescue nil
+        language    = item.text.strip rescue nil
         proficiency = item.parent.at('div/div')['class'].split(' ').first[-1,1]
         {:language=> language, :proficiency => proficiency }
       end
     end
 
     def certifications
+=begin
 ##TODO
         @certifications ||= @page.search('ul.certifications/li.certification').map do |item|
             name       = item.at('h3').text.gsub(/\s+|\n/, ' ').strip                         rescue nil
@@ -138,9 +135,8 @@ module Viadeo
 
             {:name => name, :authority => authority, :license => license, :start_date => start_date}
           end
-
+=end
     end
-
 
     def recommended_visitors
 ##TODO
@@ -148,8 +144,8 @@ module Viadeo
         v = {}
         v[:link]    = visitor.at('a')['href']
         v[:name]    = visitor.at('.bd/h4.fullname/a').text
-        v[:title]   = visitor.at('.headline').text.gsub('...',' ').split(', ').first
-        v[:company] = visitor.at('.headline').text.gsub('...',' ').split(', ')[1]
+        v[:title]   = visitor.at('.headline').text.gsub('...',' ').split(/(, |at ){1}/).first.strip
+        v[:company] = visitor.at('.headline').text.gsub('...',' ').split(/(, |at ){1}/)[2..-1].join.strip rescue nil
         v
       end
     end
@@ -170,23 +166,28 @@ module Viadeo
 
           company               = {}
           company[:title]       = node.at('.titre').text.gsub(/\s+|\n/, ' ').strip if node.at('.titre')
-          company[:company]     = node.at('.title/div').text.gsub(/\s+|\n/, ' ').strip if node.at('.title/div')
-#          company[:company]     = node.at('span[itemprop="name"]').text.gsub(/\s+|\n/, ' ').strip if node.at('span[itemprop="name"]')
-#          company[:description] = node.at('span[itemprop="name"]/div').text.gsub(/\s+|\n/, ' ').strip if node.at('span[itemprop="name"]/div')
+          if node.css('.title .bd .cf').any?
+            company[:company]   = node.css('.title .bd .cf').text.gsub(/\s+|\n/, ' ').strip
+            company[:size]      = node.css('.title .bd div').text.gsub(/\s+|\n/, ' ').strip.gsub(company[:company], '')
+          end
           company[:description] = node.at(".description").text.gsub(/\s+|\n/, ' ').strip if node.at(".description")
-          p node.at('.start-date').text
+
           start_date  = node.at('.start-date').text.gsub(/\s+|\n/, ' ').strip rescue nil
           company[:start_date] = parse_date(start_date) rescue nil
 
-          end_date = node.at('.end-date').text.gsub(/\s+|\n/, ' ').strip rescue nil
-          company[:end_date] = parse_date(end_date) rescue nil
+          if node.at('.stillIntrue')
+            company[:end_date] = nil
+          else
+            end_date = node.at('.end-date').text.gsub(/\s+|\n/, ' ').strip rescue nil
+            company[:end_date] = parse_date(end_date) rescue nil
+          end
 
-	  company_link = node.at('.itemName')['href'] if node.at('.itemName')
-	  if company_link =~ /\/company\//
-          result = get_company_details(company_link)
-          companies << company.merge!(result)
-	  else
-	  companies << company
+  	  company_link = node.at('.itemName')['href'] if node.at('.itemName')
+  	  if company_link =~ /\/company\//
+            result = get_company_details(company_link)
+            companies << company.merge!(result)
+  	  else
+  	  companies << company
 	  end
         end
       end
