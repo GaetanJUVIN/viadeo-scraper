@@ -83,14 +83,10 @@ module Viadeo
 
     def education
        @education ||= @page.search('.blockitemEducation').map do |item|
-        name      = item.at('span[itemprop="name"]').text.gsub(/\s+|\n/, ' ').strip      if item.at('span[itemprop="name"]')
-        desc      = item.at('.type').text.gsub(/\s+|\n/, ' ').strip      if item.at('.type')
-        startDate = parse_date(item.at('.start-date').text.gsub(/\s+|\n/, ' ').strip) if item.at('.start-date')
-        if item.at('.stillIntrue')
-          endDate = nil
-        elsif item.at('.end-date')
-          endDate = parse_date(item.at('.end-date').text.gsub(/\s+|\n/, ' ').strip)
-        end
+        name      = item.at('span[itemprop="name"]').text.gsub(/\s+|\n/, ' ').strip     if item.at('span[itemprop="name"]')
+        desc      = item.at('.type').text.gsub(/\s+|\n/, ' ').strip                     if item.at('.type')
+        startDate = parse_date(item.at('.start-date').text.gsub(/\s+|\n/, ' ').strip)   if item.at('.start-date')
+        endDate   = parse_date(item.at('.end-date').text.gsub(/\s+|\n/, ' ').strip)     if item.at('.stillIntrue') == nil and item.at('.end-date')
 
         {:name => name, :description => desc, :startDate => startDate, :endDate => endDate}
       end
@@ -205,6 +201,7 @@ module Viadeo
     end
 
     def parse_date(date)
+      return nil if date.blank?
       date = "#{date}-01-01" if date =~ /^(19|20)\d{2}$/
       Date.parse_international(date)
     end
