@@ -34,6 +34,8 @@ class Date
   MONTH_TRANSLATIONS.merge! make_hash(%w/Januar	Februar	März	April	Mai	Juni	Juli	August	September	Oktober	November	Dezember/)  # German
   MONTH_TRANSLATIONS.merge! make_hash(%w/gennaio	febbraio	marzo	aprile	maggio	giugno	luglio	agosto	settembre	ottobre	novembre	dicembre/)  # Italian
   MONTH_TRANSLATIONS.merge! make_hash(%w/enero	febrero	marzo	abril	mayo	junio	julio	agosto	septiembre	octubre	noviembre	diciembre/) # Spanish
+  MONTH_TRANSLATIONS.merge! make_hash(%w/يناير فبراير مارس ابريل مايو يونيو يوليوز اغسطس شتنبر أكتوبر نونبر دجنبر/) # Arabian
+  MONTH_TRANSLATIONS.merge! make_hash(%w/январь февраль март апрель май июнь июль август сентябрь октябрь ноябрь декабрь/) # Russian
 
   def self.month_to_english(string)
     month_from = string[/[^\s\d,]+/i]      # Search for a month name

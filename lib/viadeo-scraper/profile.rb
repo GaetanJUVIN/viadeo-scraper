@@ -85,6 +85,7 @@ module Viadeo
        @education ||= @page.search('.blockitemEducation').map do |item|
         name      = item.at('span[itemprop="name"]').text.gsub(/\s+|\n/, ' ').strip     if item.at('span[itemprop="name"]')
         desc      = item.at('.type').text.gsub(/\s+|\n/, ' ').strip                     if item.at('.type')
+        p item.at('.start-date').text
         startDate = parse_date(item.at('.start-date').text.gsub(/\s+|\n/, ' ').strip)   if item.at('.start-date')
         endDate   = parse_date(item.at('.end-date').text.gsub(/\s+|\n/, ' ').strip)     if item.at('.stillIntrue') == nil and item.at('.end-date')
 
@@ -174,7 +175,9 @@ module Viadeo
           company[:title]       = node.at('.titre').text.gsub(/\s+|\n/, ' ').strip if node.at('.titre')
           if node.css('.title .bd .cf').any?
             company[:company]   = node.css('.title .bd .cf').text.gsub(/\s+|\n/, ' ').strip
-            company[:size]      = node.css('.title .bd div').text.gsub(/\s+|\n/, ' ').strip.gsub(company[:company], '')
+            company_size = node.css('.title .bd div').text.gsub(/\s+|\n/, ' ').strip.gsub(company[:company], '')
+
+            company[:size]      = company_size                                     if company_size.blank? == false
           end
           company[:description] = node.at(".description").text.gsub(/\s+|\n/, ' ').strip if node.at(".description")
 
