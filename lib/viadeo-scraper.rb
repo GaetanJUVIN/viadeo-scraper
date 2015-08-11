@@ -10,5 +10,6 @@ require 'mechanize'
 require 'cgi'
 require 'net/http'
 
+require 'viadeo-scraper/exception'
 require 'viadeo-scraper/date_international'
 require 'viadeo-scraper/profile'

@@ -85,7 +85,6 @@ module Viadeo
        @education ||= @page.search('.blockitemEducation').map do |item|
         name      = item.at('span[itemprop="name"]').text.gsub(/\s+|\n/, ' ').strip     if item.at('span[itemprop="name"]')
         desc      = item.at('.type').text.gsub(/\s+|\n/, ' ').strip                     if item.at('.type')
-        p item.at('.start-date').text
         startDate = parse_date(item.at('.start-date').text.gsub(/\s+|\n/, ' ').strip)   if item.at('.start-date')
         endDate   = parse_date(item.at('.end-date').text.gsub(/\s+|\n/, ' ').strip)     if item.at('.stillIntrue') == nil and item.at('.end-date')
 
@@ -206,7 +205,11 @@ module Viadeo
     def parse_date(date)
       return nil if date.blank?
       date = "#{date}-01-01" if date =~ /^(19|20)\d{2}$/
-      Date.parse_international(date)
+      begin
+        Date.parse_international(date)
+      rescue
+        raise Viadeo::UnknownLanguage.new(date)
+      end
     end
 
     def get_company_details(link)
