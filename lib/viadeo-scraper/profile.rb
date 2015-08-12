@@ -88,7 +88,7 @@ module Viadeo
         startDate = parse_date(item.at('.start-date').text.gsub(/\s+|\n/, ' ').strip)   if item.at('.start-date')
         endDate   = parse_date(item.at('.end-date').text.gsub(/\s+|\n/, ' ').strip)     if item.at('.stillIntrue') == nil and item.at('.end-date')
 
-        {:name => name, :description => desc, :startDate => startDate, :endDate => endDate}
+        {:name => name, :description => desc, :start_date => startDate, :end_date => endDate}
       end
     end
 
